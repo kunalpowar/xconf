@@ -26,7 +26,37 @@ $(document).ready(function() {
 
     var mappedSpeed = 0;
     var mappedAngle = 0;
-    var velocityString = mappedSpeed + "," + mappedAngle
+
+    var controlSpeed = true;
+    var controlAngle = true;
+
+    getParameterByName = function(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    sendDataToCar = function() {
+        if (ws.readyState === 1) {
+            var vel = [0, 0]
+            if (controlSpeed) {
+                vel[0] = mappedSpeed
+            }
+            if (controlAngle) {
+                vel[1] = mappedAngle
+            }
+            var velString = vel.join(',')
+            console.log("sending velocityString: " + velString);
+            ws.send(velString);
+        }
+    }
+
+    if (!getParameterByName("speed")) {
+        controlSpeed = false
+    } else if (!getParameterByName("angle")) {
+        controlAngle = false
+    }
 
     for (i = 0; i < len; i++) {
         $(ticks[i]).css({
@@ -42,14 +72,7 @@ $(document).ready(function() {
         });
     }, 200);
 
-    setInterval(function() {
-        if (ws.readyState === 1) {
-            var vel = mappedSpeed + "," + mappedAngle
-            console.log("sending velocityString: " + vel);
-            ws.send(vel);
-        }
-    }, 50);
-
+    setInterval(sendDataToCar, 50);
 
 
     updateMappedAngle = function() {
